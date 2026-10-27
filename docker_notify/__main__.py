@@ -1,6 +1,6 @@
 import argparse
 import socket
-
+from datetime import datetime
 from . import check, configure, mail
 
 
@@ -17,7 +17,9 @@ def main():
     if cmd == "check":
         print(report)
     else:
-        mail.send(f"Docker update report - {socket.gethostname()}", report)
+        stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+        mail.send(f"[Docker update report][{socket.gethostname()}][{stamp}]", report)
+
 
 
 if __name__ == "__main__":

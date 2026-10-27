@@ -1,6 +1,7 @@
 import os
 import smtplib
 import ssl
+import html
 from email.message import EmailMessage
 
 def send(subject, body):
@@ -9,6 +10,11 @@ def send(subject, body):
     msg["From"] = os.environ["SMTP_FROM"]
     msg["To"] = os.environ["SMTP_TO"]
     msg.set_content(body)
+    msg.add_alternative(
+        '<pre style="font-family: ui-monospace, Menlo, Consolas, '
+        f'\'DejaVu Sans Mono\', monospace; font-size: 13px;">{html.escape(body)}</pre>',
+        subtype="html",
+    )
 
     host = os.environ["SMTP_HOST"]
     port = int(os.environ.get("SMTP_PORT", "587"))
