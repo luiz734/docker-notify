@@ -7,6 +7,13 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 COMPOSE_NAMES = ("compose.yaml", "compose.yml", "docker-compose.yml", "docker-compose.yaml")
+CONTAINER_ORDER = {"running": 0, "partial": 1, "stopped": 2}
+
+
+def sort_key(row):
+    name, _, containers = row
+    return (CONTAINER_ORDER.get(containers.split()[0], 3), name.lower())
+
 
 def run(cmd, cwd=None):
     r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
@@ -71,6 +78,7 @@ def build_report():
                   if d.is_dir() and any((d / n).is_file() for n in COMPOSE_NAMES))
     with ThreadPoolExecutor(max_workers=4) as ex:
         rows = list(ex.map(check, dirs))
+    rows.sort(key=sort_key)
 
     w = max([len(r[0]) for r in rows] + [len("service")])
     lines = [f"{'service':<{w}}  {'image':<14}  containers",
