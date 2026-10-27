@@ -37,29 +37,29 @@ def update_status(images):
         local = local_digests(img)
         remote = remote_digest(img)
         if remote is None:
-            states.add("?")
+            states.add("check failed")
         elif local is None:
-            states.add("not pulled")
+            states.add("missing local")
         elif remote not in local:
-            states.add("yes")
-    for s in ("yes", "not pulled", "?"):
+            states.add("needs update")
+    for s in ("needs update", "missing local", "check failed"):
         if s in states:
             return s
-    return "no"
+    return "up to date"
 
 
 def running_status(d, total):
     rc, out = run(["docker", "compose", "ps", "-q", "--status", "running"], cwd=d)
     n = len(out.splitlines()) if rc == 0 and out else 0
     if total == 0 or n == 0:
-        return "no"
-    return "yes" if n >= total else f"partial ({n}/{total})"
+        return "stopped"
+    return "running" if n >= total else f"partial ({n}/{total})"
 
 
 def check(d):
     rc, out = run(["docker", "compose", "config", "--format", "json"], cwd=d)
     if rc != 0:
-        return d.name, "error", "error"
+        return d.name, "compose error", "unknown"
     services = json.loads(out).get("services", {})
     images = {s["image"] for s in services.values() if "image" in s}
     return d.name, update_status(images), running_status(d, len(services))
@@ -73,7 +73,7 @@ def build_report():
         rows = list(ex.map(check, dirs))
 
     w = max([len(r[0]) for r in rows] + [len("service")])
-    lines = [f"{'service':<{w}}  {'update':<10}  running",
-             f"{'-' * w}  {'-' * 10}  {'-' * 12}"]
-    lines += [f"{n:<{w}}  {u:<10}  {r}" for n, u, r in rows]
+    lines = [f"{'service':<{w}}  {'image':<14}  containers",
+             f"{'-' * w}  {'-' * 14}  {'-' * 12}"]
+    lines += [f"{n:<{w}}  {u:<14}  {r}" for n, u, r in rows]
     return "\n".join(lines)
