@@ -2,6 +2,7 @@
 import json
 import subprocess
 import os
+import re
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -20,9 +21,12 @@ def local_digests(image):
 
 
 def remote_digest(image):
-    rc, out = run(["docker", "buildx", "imagetools", "inspect", image,
-                   "--format", "{{.Manifest.Digest}}"])
-    return out if rc == 0 and out.startswith("sha256:") else None
+    r = subprocess.run(["docker", "buildx", "imagetools", "inspect", image],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        return None
+    m = re.search(r"^Digest:\s+(sha256:[0-9a-f]{64})", r.stdout, re.M)
+    return m.group(1) if m else None
 
 
 def update_status(images):
