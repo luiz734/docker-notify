@@ -1,0 +1,7 @@
+export DOCKER_ROOT=/path/to/docker
+export SMTP_HOST=smtp.gmail.com
+export SMTP_PORT=587
+export SMTP_USER=you@gmail.com
+export SMTP_PASS=abcdefghijklmnop
+export SMTP_FROM=you@gmail.com
+export SMTP_TO=you@gmail.com
